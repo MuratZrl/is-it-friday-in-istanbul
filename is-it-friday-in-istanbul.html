@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Is it Friday in Istanbul?</title>
+<meta name="description" content="The most important question of the week, answered live from Istanbul time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg-2: #0e1424;
+    --ink: #f5f7fa;
+    --ink-dim: #6b7a99;
+    --line: #1a2238;
+
+    --yes: #4ade80;
+    --yes-glow: rgba(74, 222, 128, 0.6);
+    --no: #f87171;
+    --no-glow: rgba(248, 113, 113, 0.6);
+    --bosphorus: #38bdf8;
+    --bosphorus-glow: rgba(56, 189, 248, 0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "JetBrains Mono", monospace;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Bosphorus glow background */
+  body {
+    background:
+      radial-gradient(ellipse at 50% 80%, rgba(56, 189, 248, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 20%, rgba(74, 222, 128, 0.04) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 30%, rgba(248, 113, 113, 0.04) 0%, transparent 40%),
+      var(--bg);
+    position: relative;
+  }
+
+  /* Subtle grid */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(56, 189, 248, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56, 189, 248, 0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    z-index: 0;
+  }
+
+  /* Skyline silhouette */
+  .skyline {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  .skyline svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px 180px;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .question {
+    font-family: "JetBrains Mono", monospace;
+    font-size: clamp(13px, 2vw, 18px);
+    color: var(--bosphorus);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    margin-bottom: 36px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .question::before, .question::after {
+    content: "";
+    width: 40px;
+    height: 1px;
+    background: var(--bosphorus);
+    box-shadow: 0 0 8px var(--bosphorus-glow);
+  }
+
+  .answer {
+    font-family: "Anton", "Impact", sans-serif;
+    font-size: clamp(120px, 28vw, 360px);
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+    transition: color 0.4s ease, text-shadow 0.4s ease;
+  }
+
+  .answer.yes {
+    color: var(--yes);
+    text-shadow:
+      0 0 40px var(--yes-glow),
+      0 0 80px var(--yes-glow),
+      0 0 120px rgba(74, 222, 128, 0.3);
+  }
+
+  .answer.no {
+    color: var(--no);
+    text-shadow:
+      0 0 40px var(--no-glow),
+      0 0 80px var(--no-glow),
+      0 0 120px rgba(248, 113, 113, 0.3);
+  }
+
+  .subtext {
+    font-family: "JetBrains Mono", monospace;
+    font-size: clamp(13px, 1.6vw, 17px);
+    color: var(--ink-dim);
+    max-width: 540px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+    min-height: 2.6em;
+  }
+
+  .subtext .highlight {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .clock-card {
+    background: rgba(14, 20, 36, 0.6);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 28px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 320px;
+  }
+
+  .clock-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+  }
+
+  .clock-row .label {
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .clock-row .value {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .clock-row .value.live {
+    color: var(--bosphorus);
+    text-shadow: 0 0 8px var(--bosphorus-glow);
+  }
+
+  .pulse {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bosphorus);
+    margin-right: 6px;
+    box-shadow: 0 0 6px var(--bosphorus);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .footer {
+    margin-top: 40px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    opacity: 0.7;
+    max-width: 460px;
+    line-height: 1.7;
+  }
+
+  .footer a {
+    color: var(--bosphorus);
+    text-decoration: none;
+    border-bottom: 1px dashed currentColor;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 40px 18px 140px; }
+    .question { font-size: 11px; letter-spacing: 0.2em; }
+    .question::before, .question::after { width: 24px; }
+    .clock-card { min-width: auto; width: 100%; max-width: 320px; padding: 16px 20px; }
+    .skyline { height: 80px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="question">Live from Istanbul</div>
+
+    <div class="answer" id="answer">…</div>
+
+    <div class="subtext" id="subtext">checking the calendar…</div>
+
+    <div class="clock-card">
+      <div class="clock-row">
+        <span class="label"><span class="pulse"></span>Istanbul Time</span>
+        <span class="value live" id="time">—</span>
+      </div>
+      <div class="clock-row">
+        <span class="label">Day</span>
+        <span class="value" id="day">—</span>
+      </div>
+      <div class="clock-row">
+        <span class="label">Until next Friday</span>
+        <span class="value" id="countdown">—</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      No backend. No database. No tracking. Just <code>new Date()</code> with a sense of humor.
+      <br>Time zone: <strong>Europe/Istanbul (UTC+3)</strong>.
+    </div>
+  </div>
+
+  <div class="skyline">
+    <svg viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,120 L0,90 L30,90 L30,70 L50,70 L50,80 L70,80 L70,60 L85,60 L85,70 L100,70 L100,40 L110,40 L110,30 L120,30 L120,40 L130,40 L130,70 L150,70 L150,85 L180,85 L180,75 L200,75 L200,55 L215,55 L215,45 L225,45 L225,55 L240,55 L240,75 L260,75 L260,90 L290,90 L290,65 L310,65 L310,75 L330,75 L330,50 L345,50 L345,40 L355,40 L355,50 L370,50 L370,80 L390,80 L390,70 L410,70 L410,90 L440,90 L440,75 L460,75 L460,55 L480,55 L480,45 L495,45 L490,30 L505,30 L500,15 L510,15 L505,30 L520,30 L515,45 L530,45 L530,55 L550,55 L550,75 L580,75 L580,85 L610,85 L610,65 L630,65 L630,75 L650,75 L650,90 L680,90 L680,70 L700,70 L700,55 L715,55 L715,45 L725,45 L725,55 L740,55 L740,80 L760,80 L760,70 L780,70 L780,85 L810,85 L810,75 L830,75 L830,55 L850,55 L850,40 L865,40 L860,25 L875,25 L870,40 L885,40 L885,55 L905,55 L905,80 L930,80 L930,90 L960,90 L960,75 L985,75 L985,60 L1005,60 L1005,75 L1025,75 L1025,85 L1055,85 L1055,70 L1080,70 L1080,55 L1100,55 L1100,75 L1130,75 L1130,90 L1170,90 L1170,80 L1200,80 L1200,120 Z" fill="#1a2238"/>
+    </svg>
+  </div>
+
+  <script>
+    const dayNames = [
+      "Sunday", "Monday", "Tuesday", "Wednesday",
+      "Thursday", "Friday", "Saturday"
+    ];
+
+    const subtexts = {
+      0: "It's <span class='highlight'>Sunday</span>. You have an entire work week to climb. Conserve energy.",
+      1: "Monday. The mountain begins. Friday is <span class='highlight'>4 days away</span>.",
+      2: "Tuesday. Still climbing. <span class='highlight'>3 days</span> until Friday.",
+      3: "Wednesday. The hump. <span class='highlight'>2 days</span> until Friday. You can do this.",
+      4: "Thursday. So close. <span class='highlight'>1 day</span> until Friday. Don't quit now.",
+      5: "It's <span class='highlight'>FRIDAY</span> in Istanbul. The week is yours. Go forth and rakı.",
+      6: "Saturday. You earned it. Friday was yesterday. <span class='highlight'>Next Friday is 6 days away</span>."
+    };
+
+    function getIstanbulDate() {
+      // Europe/Istanbul is UTC+3, no DST
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      return new Date(utc + (3 * 3600000));
+    }
+
+    function formatTime(d) {
+      const h = String(d.getHours()).padStart(2, "0");
+      const m = String(d.getMinutes()).padStart(2, "0");
+      const s = String(d.getSeconds()).padStart(2, "0");
+      return `${h}:${m}:${s}`;
+    }
+
+    function daysUntilFriday(day) {
+      if (day === 5) return 0;
+      if (day < 5) return 5 - day;
+      return 7 - day + 5; // Saturday → next Friday
+    }
+
+    function update() {
+      const d = getIstanbulDate();
+      const day = d.getDay();
+      const isFriday = day === 5;
+
+      const answerEl = document.getElementById("answer");
+      answerEl.textContent = isFriday ? "YES" : "NO";
+      answerEl.className = "answer " + (isFriday ? "yes" : "no");
+
+      document.getElementById("subtext").innerHTML = subtexts[day];
+      document.getElementById("time").textContent = formatTime(d);
+      document.getElementById("day").textContent = dayNames[day];
+
+      const days = daysUntilFriday(day);
+      document.getElementById("countdown").textContent =
+        days === 0 ? "today" : `${days} day${days > 1 ? "s" : ""}`;
+    }
+
+    update();
+    setInterval(update, 1000);
+
+    // Also update title for dramatic effect
+    document.title = "Is it Friday in Istanbul? — checking…";
+    setTimeout(() => {
+      const isFriday = getIstanbulDate().getDay() === 5;
+      document.title = isFriday
+        ? "YES — it's Friday in Istanbul"
+        : "NO — not yet, Istanbul is waiting";
+    }, 100);
+  </script>
+
+</body>
+</html>
